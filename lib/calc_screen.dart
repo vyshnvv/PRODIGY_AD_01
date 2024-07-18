@@ -15,6 +15,7 @@ class CalcScreen extends StatefulWidget {
 class _CalcScreenState extends State<CalcScreen> {
   String userInput = "";
   String result = "";
+  bool hasError = false;
 
   List<String> btnList = [
     "AC",
@@ -45,14 +46,23 @@ class _CalcScreenState extends State<CalcScreen> {
       if (symbol == "AC") {
         userInput = "0";
         result = "";
+        hasError = false;
       } else if (symbol == "C") {
         if (userInput != "") {
           userInput = userInput.substring(0, userInput.length - 1);
           if (userInput.isEmpty) {
             userInput = "0";
+            if (hasError) {
+              hasError = false;
+              result = "";
+            }
           }
         } else {
           userInput = "0";
+          if (hasError) {
+            hasError = false;
+            result = "";
+          }
         }
       } else if (symbol == "( )") {
         if (userInput.contains("(")) {
@@ -63,6 +73,7 @@ class _CalcScreenState extends State<CalcScreen> {
           userInput += symbol;
         }
       } else if (symbol == "=") {
+        hasError = false;
         try {
           temp = userInput;
           if (temp.contains("√")) {
@@ -82,9 +93,26 @@ class _CalcScreenState extends State<CalcScreen> {
                   sqrt(double.parse(temp[index + 1])).toStringAsPrecision(5));
             }
           }
+          if (temp.contains("log")) {
+            var index = temp.indexOf("log");
+            if (temp[index + 3] == "(") {
+              var subexp = temp.substring(index + 4, temp.indexOf(")"));
+              var parsed = inputParser(subexp);
+              if (parsed.endsWith(".0")) {
+                parsed = parsed.replaceAll(".0", "");
+              }
+              temp = temp.replaceRange(index, temp.indexOf(")") + 1,
+                  log(double.parse(parsed)).toStringAsPrecision(5));
+              result = temp.replaceAll(".0", "");
+            } else {
+              result = temp.replaceRange(index, index + 2,
+                  log(double.parse(temp[index + 1])).toStringAsPrecision(5));
+            }
+          }
 
           if (inputParser(temp) == "Infinity") {
             result = "cannot divide by zero";
+            hasError = true;
           } else {
             if (inputParser(temp).endsWith(".0")) {
               result = inputParser(temp).replaceAll(".0", "");
@@ -92,9 +120,10 @@ class _CalcScreenState extends State<CalcScreen> {
           }
         } catch (e) {
           result = "Format Error";
+          hasError = true;
         }
       } else {
-        if (userInput.length == 1) {
+        if (userInput.length == 1 && userInput == "0") {
           userInput = "";
           userInput += symbol;
         } else {
@@ -154,7 +183,25 @@ class _CalcScreenState extends State<CalcScreen> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Text(result, style: TextStyle(fontSize: 50)),
+                          Text(
+                            result,
+                            style: TextStyle(
+                                fontSize: 50,
+                                color: result == "cannot divide by zero" ||
+                                        result == "Format Error"
+                                    ? secondaryColor7
+                                    : Colors.white),
+                            textScaler: TextScaler.linear(0.7),
+                          ),
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          if (hasError)
+                            Icon(
+                              Icons.error_outline,
+                              size: size.width * 0.08,
+                              color: secondaryColor7,
+                            ),
                         ],
                       ),
                     ),

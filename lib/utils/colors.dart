@@ -8,3 +8,4 @@ const secondaryColor3 = Color(0xffc5c8a8);
 const secondaryColor4 = Color(0xffeca68f);
 const secondaryColor5 = Color(0xff95946d);
 const secondaryColor6 = Color(0xffbe9c83);
+const secondaryColor7 = Color(0xfff04e45);
